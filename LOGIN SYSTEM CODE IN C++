@@ -1,0 +1,362 @@
+#include <iostream>
+#include <string>
+#include"HashTable.h"
+using namespace std;
+class Node 
+{
+    public:
+    string username;
+    string password;
+    Node* next;
+
+    Node(string u, string p) 
+    {
+        username = u;
+        password = p;
+        next = 0;
+    }
+};
+const int TABLE_SIZE = 3;   // Number of buckets in hash table
+class HashTable 
+{
+    private:
+    Node* table[TABLE_SIZE];
+
+    // Simple hash function
+    int hashFunction(string key) 
+    {
+        int sum = 0;
+        for (char c : key)
+            sum =sum+c;
+        return sum % TABLE_SIZE;
+    }
+
+    public:
+    HashTable() 
+    {
+        for (int i = 0; i < TABLE_SIZE; i++)
+            table[i] = 0;
+    }
+    void registerUser(string username, string password)
+    {
+        int index = hashFunction(username);
+        // Check if username already exists
+        Node* temp = table[index];
+        while (temp != 0) 
+        {
+            if (temp->username == username) 
+            {
+                cout << "Username already exists!"<<endl;
+                return;
+            }
+            temp = temp->next;
+        }
+        // Insert new user
+        Node* newNode = new Node(username, password);
+        newNode->next = table[index];
+        table[index] = newNode;
+
+        cout << "User registered successfully!"<<endl;
+    }
+    void login(string username, string password)
+    {
+         int index = hashFunction(username);
+        Node* temp = table[index];
+        while (temp!=0) 
+        {
+            if (temp->username == username) 
+            {
+                if (temp->password == password)
+                    cout << "Login successful!"<<endl;
+                else
+                    cout << "Incorrect password!"<<endl;
+                return;
+            }
+            temp = temp->next;
+        }
+
+        cout << "Username not found!"<<endl;
+    }
+    void changePassword(string username, string newPass)
+    {
+        int index = hashFunction(username);
+        Node* temp = table[index];
+        while (temp != 0) 
+        {
+            if (temp->username == username) 
+            {
+                temp->password = newPass;
+                cout << "Password updated successfully!"<<endl;
+                return;
+            }
+            temp = temp->next;
+        }
+
+        cout << "Username not found!"<<endl;
+    }
+    void deleteUser(string username)
+    {
+        int index = hashFunction(username);
+        Node* temp = table[index];
+        Node* prev = 0;
+        while (temp!=0) 
+        {
+            if (temp->username == username) 
+            {
+                if (prev == 0)
+                    table[index] = temp->next;
+                else
+                    prev->next = temp->next;
+
+                delete temp;
+                cout << "User deleted successfully!"<<endl;
+                return;
+            }
+            prev = temp;
+            temp = temp->next;
+        }
+
+        cout << "Username not found!"<<endl;
+    }
+    void display()
+    {
+        cout << "========DISPLAYING DATA OF THE DATABASE======="<<endl;
+        for (int i = 0; i < TABLE_SIZE; i++) 
+        {
+            cout << "Bucket " << i << ": ";
+            Node* temp = table[i];
+            if (temp == 0) 
+                cout << "EMPTY"<<endl;
+            else
+            {
+                while (temp != 0) 
+                {
+                    cout << "[" << temp->username << " : " << temp->password << "] -> ";
+                    temp = temp->next;
+                }
+                cout << "NULL"<<endl;
+            }
+        }
+    }
+    int totalUsers()
+    {
+        int count = 0;
+        for (int i = 0; i < TABLE_SIZE; i++) 
+        {
+            Node* temp = table[i];
+            while (temp != 0) 
+            {
+                count++;
+                temp = temp->next;
+            }
+        }
+        return count;
+    }
+    bool userExists(string username)
+    {
+        int index = hashFunction(username);
+        Node* temp = table[index];
+        while (temp != 0) 
+        {
+            if (temp->username == username)
+                return true;
+            temp = temp->next;
+        }
+        return false;
+    }
+    void updateUsername(string oldUser)
+    {
+        int index = hashFunction(oldUser);
+        Node* temp = table[index];
+        bool find=false;
+        while (temp != 0 && find==false) 
+        {
+            if (temp->username == oldUser)
+            {
+                find=true;
+                string newuser;
+                cout<<"enter new user:";
+                cin.ignore();
+                getline(cin,newuser);
+                if (userExists(newuser)) // matches for new username if exists already
+                {
+                    cout << "New username already exists!"<<endl;
+                    return;
+                }
+                else
+                {
+                    temp->username = newuser;
+                    cout << "Username updated successfully!"<<endl;
+                    return;
+                }
+            }
+            else
+                temp = temp->next;
+        }
+        if(find==false)
+            cout << "Old username not found!"<<endl;
+    }
+    bool StrongPassword(string pass)
+    {
+        if(pass.length()>=8)
+        return 1;
+        else
+            return 0;
+    }
+    void displayBucket(int bucket)
+    {
+            if (bucket < 0 || bucket >= TABLE_SIZE)
+        {
+            cout << "Invalid bucket!\n";
+            return;
+        }
+        Node* temp = table[bucket];
+        cout << "Bucket " << bucket << ": ";
+        if (temp == 0)//if bucket has no content
+        {
+            cout << "EMPTY\n";
+            return;
+        }
+        while (temp != 0) 
+        {
+            cout << "username:" << temp->username <<" "<<"password:"<<temp->password<<endl;
+            temp = temp->next;
+        }
+        cout << "NULL\n";
+    }
+    void clearAllUsers()
+    {
+        if(isempty()==false)
+        {
+            for (int i=0;i<TABLE_SIZE;i++) 
+            {
+                Node* temp = table[i];
+                while (temp != 0) 
+                {
+                    Node* ptr = temp;
+                    temp = temp->next;
+                    delete ptr;
+                }
+                table[i]=0;
+            }
+            cout << "All users deleted successfully!"<<endl;
+        }
+        else
+            cout<<"the database is already empty"<<endl;
+    }
+    bool isempty()
+    {
+        for(int i=0;i<TABLE_SIZE;++i)
+        {
+            if(table[i]!=0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+int main() 
+{
+    HashTable ht;
+    int choice;
+    string user, pass;
+    do 
+    {
+        cout << "===== FAST LOGIN SYSTEM (HASH TABLE) ====="<<endl;
+        cout << "1. Register User"<<endl;
+        cout << "2. Login"<<endl;
+        cout << "3. Change Password"<<endl;
+        cout << "4. Delete User"<<endl;
+        cout << "5. Display All Users (Testing)"<<endl;
+        cout << "6. TotalUsers"<<endl;
+        cout << "7. Update Usernames"<<endl;
+        cout << "8. Display Contents of a bucket "<<endl;
+        cout << "9.Clearing all the contents"<<endl;
+        cout << "10. Exit"<<endl;
+        cout << "Enter choice: ";
+        cin>>choice;
+        if(choice>=1 && choice<= 100)
+        {
+            if(choice==1)
+            {
+                bool found=false;
+                cout << "Enter username: ";
+                cin.ignore();
+                getline(cin,user);
+                while(found==false)
+                {
+                    cout << "Enter password(atleast 8 characters): ";
+                    getline(cin,pass);
+                    if(ht.StrongPassword(pass))
+                        found=true;
+                    else
+                        cout<<"not a strong password enter again"<<endl;
+                }
+                ht.registerUser(user, pass);
+            }
+            else if(choice==2)
+            {
+                cout << "Enter username: ";
+                cin.ignore();
+                getline(cin,user);
+                cout << "Enter password: ";
+                getline(cin,pass);
+                ht.login(user, pass);
+            }
+            else if(choice==3)
+            {
+                bool find=false;
+                cout << "Enter username: ";
+                cin.ignore();
+                getline(cin,user);
+                while(find==false)
+                {
+                    cout << "Enter new password: ";
+                    getline(cin,pass);
+                    if(ht.StrongPassword(pass))
+                        find=true;
+                    else
+                        cout<<"not a strong password enter again"<<endl;
+                }
+                ht.changePassword(user, pass);
+            }
+            else if(choice==4)
+            {
+                cout << "Enter username: ";
+                cin.ignore();
+                getline(cin,user);
+                ht.deleteUser(user);
+            }
+            else if(choice==5)
+                ht.display();
+            else if(choice==6)
+                cout<<"total users:"<<ht.totalUsers()<<endl;
+            else if(choice==7)
+            {
+                string oldUser;
+                cout<<"enter the old username:";
+                cin.ignore();
+                getline(cin,oldUser);
+                ht.updateUsername(oldUser);
+            }
+            else if(choice==8)
+            {
+                int n;
+                cout<<"enter bucket index:";
+                cin>>n;
+                ht.displayBucket(n);
+            }
+            else if(choice==9)
+                ht.clearAllUsers();
+            else
+            {
+                cout<<"invalid choice"<<endl;
+            }
+        }
+        else
+        {
+            cout<<"the choice you entered is wrong"<<endl;
+        }
+    }while(choice !=10);
+}
